@@ -12,8 +12,8 @@ Mais plus serieusement ce script **python** devrait pouvoir scanner le reseau lo
 
 __Hé oui!!__
 
-Effectivement j'en ai fait un executable mais  
-j'ai laissé les codes en open source  
-pour ceux qui veullent modifié cette abomination
+Effectivement j'en ai fait un executable mais j'ai laissé les codes en open source pour ceux qui veullent modifié cette abomination
+
+__HAVE FUN__
 
 -------
