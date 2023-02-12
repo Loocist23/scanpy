@@ -1,57 +1,34 @@
-import socket
-import struct
+import tkinter as tk
 from scapy.all import Ether, ARP, srp
 
-
-
-def scan_network(ip):
-    # Envoie un paquet ARP pour trouver les adresses MAC
-    ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip), timeout=2, iface=None, verbose=False)
-
-    # Affiche les adresses IP et MAC trouvées
-    print("Adresses IP/MAC trouvées :")
+def scan_network(network):
+    ip_list = []
+    mac_list = []
+    ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=network), timeout=2)
     for snd, rcv in ans:
-        print("-------------------------------")
-        print(rcv.sprintf(r"Adresse MAC: %ARP.psrc%" + "\n"
-                          "Addresse IP: %Ether.src%"))
-        print("-------------------------------")
+        ip_list.append(rcv.sprintf(r"%ARP.psrc%"))
+        mac_list.append(rcv.sprintf(r"%Ether.src%"))
+    return ip_list, mac_list
 
+def display_results(ip_list, mac_list):
+    result_text.delete('1.0', tk.END)
+    result_text.insert(tk.END, "Adresses IP et MAC :\n")
+    for i in range(len(ip_list)):
+        result_text.insert(tk.END, ip_list[i] + " " + mac_list[i] + "\n")
 
-def get_cidr():
-    while True:
-        cidr = input("Entrez le masque de sous-réseau en format CIDR (ex. /24) : ")
-        try:
-            if not cidr.startswith("/"):
-                raise ValueError("Le format du masque de sous-réseau n'est pas valide")
-            cidr_value = int(cidr[1:])
-            if cidr_value < 0 or cidr_value > 32:
-                raise ValueError("Le masque de sous-réseau doit être compris entre /0 et /32")
-            return cidr
-        except ValueError as e:
-            print(e)
+root = tk.Tk()
+root.title("Scan réseau")
 
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    return s.getsockname()[0]
+network_label = tk.Label(root, text="Réseau à scanner :")
+network_label.pack()
 
+network_entry = tk.Entry(root)
+network_entry.pack()
 
-if __name__ == "__main__":
-    # Définit la plage d'adresses IP à numériser
+scan_button = tk.Button(root, text="Scanner", command=lambda: display_results(*scan_network(network_entry.get())))
+scan_button.pack()
 
-    # Obtenir l'adresse IP locale
-    ip = socket.gethostbyname(socket.gethostname())
+result_text = tk.Text(root)
+result_text.pack()
 
-    # Obtenir le masque de sous-réseau
-    netmask = socket.inet_ntoa(struct.pack('!I', struct.unpack('!I', socket.inet_aton(socket.gethostbyname(socket.gethostname())))[0] & 0xffffff00))
-    
-    # Calculer l'adresse réseau
-    network = socket.inet_ntoa(struct.pack('!I', struct.unpack('!I', socket.inet_aton(ip))[0] & struct.unpack('!I', socket.inet_aton(netmask))[0]))
-    
-    cidr = get_cidr()
-    # Concaténer l'adresse IP et le masque de sous-réseau pour définir la plage d'adresses IP à numériser
-    
-    network = network + cidr
-    print(network)
-
-    scan_network(network)
+root.mainloop()
